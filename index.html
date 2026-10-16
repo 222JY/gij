@@ -2606,6 +2606,21 @@ body.is-booting .hero-tag,body.is-booting .hero-snd{visibility:hidden}
 .fl.ft{animation-duration:.05s}
 .fl.fb{animation-duration:.05s;animation-delay:.05s}
 
+/* ---------------- v27: the loader is the DEFAULT look: until a script says otherwise (is-booting → boot-out → booted),
+   the hero is covered and the chrome is away — even if the page paints before its first script runs ---------------- */
+body:not(.is-booting):not(.boot-out):not(.booted) .hero-curtain{display:block}
+body:not(.is-booting):not(.boot-out):not(.booted) :is(.rail,.prog,.taskbar,.fx-dock,.hero-tag,.hero-snd){opacity:0;visibility:hidden}
+body:not(.is-booting):not(.boot-out):not(.booted) .boot-hint{opacity:1}
+
+/* ---------------- v27: taskbar — hover only flips the colours; nothing moves, no icon leaves its cell ---------------- */
+.tbx,.tbx:hover,.tbx:focus-visible,.tbx:active{transform:none}
+.tbx:hover,.tbx:focus-visible{box-shadow:0 0 0 2px var(--edge),4px 4px 0 2px rgba(255,240,249,.2)}
+.tbx:hover .tbx-ico svg,.tbx:hover .tbx-end svg,.tbx:hover .tb-dol-ico svg,.tb-music .tbm-next:hover svg,.tbx.tb-dol .tb-dol-ico svg{animation:none}
+.tbx:active{box-shadow:0 0 0 2px var(--edge),2px 2px 0 2px rgba(255,240,249,.2)}
+/* v27: the title's box is its loaded size from the first paint, so nothing jumps when its canvas arrives */
+.hero-title:not(.tt){height:calc(1.2 * clamp(120px, 24vh, 250px));overflow:hidden}
+@media (max-width:860px){.hero-title:not(.tt){height:calc(1.2 * clamp(62px, 10vh, 96px))}}
+
 </style>
 </head>
 <body>
@@ -2883,19 +2898,19 @@ body.is-booting .hero-tag,body.is-booting .hero-snd{visibility:hidden}
     <header class="end-intro">
       <p class="end-kick">Before the credits</p>
       <div class="tt-frame tt-frame--play"><h2 class="tt-title" id="endH">Couple Play</h2></div>
-      <p class="end-sub">Two players. <span class="t-fine">One keyboard.</span><span class="t-touch">Two thumbs.</span> Hold hands, don’t let go.</p>
+      <p class="end-sub">Two players. One button: <span class="t-fine">Space or click</span><span class="t-touch">tap</span> to hop. Hold hands, don’t let go.</p>
     </header>
 
     <div class="win inline game" id="game">
       <div class="win-bar"><span class="win-ico g-ico"></span><span class="win-title">COUPLE_PLAY.EXE</span><div class="win-btns"><button class="wb" type="button" id="gameReset" aria-label="Restart game" data-cursor="link" data-cursor-label="Restart"><svg viewBox="0 0 7 7" aria-hidden="true" shape-rendering="crispEdges"><path d="M2 0h3v1h1v1h1v3H6v1H5v1H2V6H1V5H0V3h2v2h3V2H3v1H2V2H1V1h1z" fill="currentColor"/></svg></button><button class="wb" type="button" id="gameMax" aria-label="Maximise game" aria-pressed="false" data-cursor="link" data-cursor-label="Big screen"><svg viewBox="0 0 5 5" aria-hidden="true"><path d="M0 0h5v2H0zM0 2h1v3H0zM4 2h1v3H4zM1 4h3v1H1z" fill="currentColor"/></svg></button></div></div>
       <div class="win-body">
         <div class="cp" id="cp" data-cursor="link" data-cursor-label="">
-          <canvas class="cp-cv" id="cpCv" width="960" height="540" role="img" aria-label="Couple Play: a two-player game. Finn and Elsie each ride a dolphin, holding hands; each player keeps one of them in the air. Catch hearts with the line between them, dodge the glitch walls, don’t let go."></canvas>
+          <canvas class="cp-cv" id="cpCv" width="960" height="540" role="img" aria-label="Couple Play: Finn and Elsie ride dolphins holding hands. Space, a click or a tap makes both of them hop; catch hearts with the line between them and hop through the gaps in the red danger walls without letting go."></canvas>
           <div class="cp-hud" aria-live="polite"><span class="cp-lives" id="cpLives"></span><span class="cp-score" id="cpScore">000000</span><span class="cp-best" id="cpBest">HI 000000</span></div>
           <div class="cp-keys" id="cpKeys" aria-hidden="true"><kbd class="k1" id="cpK1">A</kbd><kbd class="k2" id="cpK2">L</kbd></div>
           <div class="cp-how" id="cpHow" aria-live="polite"><span class="cp-how-n" id="cpHowN">How to play</span><b class="cp-how-t" id="cpHowT"></b><button class="cp-skip" type="button" id="cpSkip" data-cursor="link" hidden>Skip ▸</button></div>
           <div class="cp-title" id="cpTitle">
-            <button class="ob cp-go" type="button" id="cpGo" data-cursor="link" data-ob="coin|Insert coin|Press A or L">Insert coin</button><button class="ob ob--sm cp-tut" type="button" id="cpTut" data-cursor="link" data-ob="help|How to play|Learn in 20 seconds">How to play</button>
+            <button class="ob cp-go" type="button" id="cpGo" data-cursor="link" data-ob="coin|Insert coin|Then tap Space">Insert coin</button><button class="ob ob--sm cp-tut" type="button" id="cpTut" data-cursor="link" data-ob="help|How to play|Learn in 20 seconds">How to play</button>
           </div>
           <div class="cp-over" id="cpOver" hidden>
             <b>Connection<br>lost</b>
@@ -4590,7 +4605,7 @@ const Boot = (() => {
       decode($('.hero-tag'), fast ? 120 : 260);
       setTimeout(() => { if (t) t.burst = Math.max(t.burst, .55); Sfx && Sfx.static && Sfx.static(); }, fast ? 420 : 820);   // the water line crosses the title
       setTimeout(() => cta.classList.remove('is-loading', 'is-ready'), 900);
-      setTimeout(() => { body.classList.remove('boot-out', 'boot-end', 'boot-fast'); }, Math.max(3200, fdur + 700));
+      setTimeout(() => { body.classList.remove('boot-out', 'boot-end', 'boot-fast'); body.classList.add('booted'); }, Math.max(3200, fdur + 700));
       if (hash) setTimeout(() => { const el = $(hash); if (el) el.scrollIntoView({ behavior: 'smooth' }); }, 1500);
     }, lead);
   }
@@ -4754,7 +4769,8 @@ const Sections = (() => {
    ========================================================================= */
 function initHero() {
   const sec = $('#watch'), cv = $('.hero-gl'), video = $('.hero-video'), titleEl = $('#heroTitle');
-  const title = TT.create(titleEl, { theme: 'glow', intro: false, modeDefault: 0, colDefault: 0, detDefault: 1, hmax: () => isSmall() ? clamp(innerHeight * .1, 62, 96) : clamp(innerHeight * .24, 120, 250), sxMin: .62, sxMax: 1.2 });
+  /* v27: while the site loads, the title is born unlit (loading) — never one lit frame before the loader takes it */
+  const title = TT.create(titleEl, { loading: !!window.__booting, loadP: 0, loadT0: performance.now() / 1000, theme: 'glow', intro: false, modeDefault: 0, colDefault: 0, detDefault: 1, hmax: () => isSmall() ? clamp(innerHeight * .1, 62, 96) : clamp(innerHeight * .24, 120, 250), sxMin: .62, sxMax: 1.2 });
   const play = () => { const p = video.play(); p && p.catch(() => {}); };
   play(); addEventListener('pointerdown', play, { once: true });
   $('.hero-play', sec).addEventListener('click', () => { if (window.__booting) return; title.burst = 1; openTrailer(null); });
@@ -6868,7 +6884,11 @@ function initGame() {
     }
     return c;
   };
-  const S = { heart: spr(Emo.B.heart), burger: spr(Emo.B.burger), star: spr(Emo.B.star) };
+  const S = { heart: spr(Emo.B.heart), burger: spr(Emo.B.burger), star: spr(Emo.B.star),
+    warn: spr(['....y....', '...yyy...', '...yky...', '..yykyy..', '.yyykyyy.', '.yyyyyyy.', 'yyyykyyyy', 'yyyyyyyyy']) };
+  /* v27: a little seaside town on the far shore — pixel houses with lit windows, scrolling with the islands */
+  const TOWN_L = 620, town = [];
+  for (let x = 0; x < TOWN_L;) { const w = 12 + ((Math.random() * 12) | 0), h = 9 + ((Math.random() * 10) | 0); town.push({ x, w, h, roof: 3 + ((Math.random() * 4) | 0), chim: Math.random() < .4, wins: Array.from({ length: Math.max(1, (w / 6) | 0) }, (_, i) => ({ dx: 3 + i * 6, dy: 3 + ((Math.random() * Math.max(1, h - 8)) | 0), lit: Math.random() < .7, ph: Math.random() * 9, c: Math.random() < .3 ? '#ff9fce' : '#ffe45c' })) }); x += w + 4 + ((Math.random() * 26) | 0); }
   /* the pixel dolphin as a mount, in two tail frames, facing right */
   const mount = (pal, tailUp) => {
     const c = document.createElement('canvas'); c.width = Dolphin.GW; c.height = Dolphin.GH; const x = c.getContext('2d');
@@ -6919,34 +6939,42 @@ function initGame() {
     P[0].y = 96; P[1].y = 120; P.forEach(p => { p.vy = 0; p.ghost = 0; });
     paintHud(); hudScore.textContent = pad6(0);
   }
-  /* v21 · HOW TO PLAY. On the title screen the game plays itself and says what it is doing (attract mode);
-     the first coin of a visit runs a short tutorial you actually play: Finn, then Elsie, catch a heart, clear a wall. */
-  const KEY = i => FINE ? `<kbd>${i ? 'L' : 'A'}</kbd>` : `<kbd>${i ? 'right' : 'left'}</kbd>`;
-  const HOLD = i => FINE ? `Hold ${KEY(i)}` : `Hold the ${KEY(i)} half`;
+  /* v27 · ONE BUTTON. Space, a click or a tap makes BOTH riders hop at once — each hop a little different
+     (luck), so they drift apart and the line between them stretches. Keep them in the air, keep them close,
+     catch hearts with the line, hop through the gaps in the danger walls. No holding, no two-letter keys.
+     The title screen plays a captioned demo; the first coin of a visit runs a 4-step tutorial. */
+  const FLAP = 196, GRAV = 560, SPRING = 3.2, LUCK = .3;
+  const KEYN = () => FINE ? '<kbd>Space</kbd> or <kbd>click</kbd>' : '<kbd>tap</kbd>';
   function say(n, html, ok) { how.classList.add('on'); how.classList.toggle('ok', !!ok); howN.textContent = n; howT.innerHTML = html; }
   function hush() { how.classList.remove('on', 'ok'); }
-  const TUT_KEY = 'otter.couple.tut';
+  const TUT_KEY = 'otter.couple.tut2';
   const tutDone = () => { try { return !!sessionStorage.getItem(TUT_KEY); } catch (e) { return false; } };
   const markTut = () => { try { sessionStorage.setItem(TUT_KEY, '1'); } catch (e) {} };
   function begin() { if (tutDone()) start(); else startTut(); }
+  /* one hop for both, each with its own little bit of luck */
+  function hop(quiet) {
+    P.forEach(p => { p.vy = -FLAP * (1 + (Math.random() - .5) * 2 * LUCK * .5); p.flapT = t; p.used = true; });
+    if (!quiet) Sfx.blip(2 + ((Math.random() * 3) | 0));
+    P.forEach(p => { for (let k = 0; k < 4; k++) spray.push({ x: p.x - 10 + rnd(-6, 6), y: p.y + 14, vx: rnd(-40, 10), vy: rnd(20, 60), life: rnd(.2, .35), c: '#fff0f9' }); });
+  }
   function startTut() {
     reset(); state = 'tut'; titleEl.hidden = true; overEl.hidden = true; root.classList.add('playing', 'tutting');
-    walls = []; hearts = []; tut = { s: 0, held: [0, 0], wait: 0, wall: null };
-    P.forEach(p => { p.used = false; p.hold = false; });
+    walls = []; hearts = []; tut = { s: 0, hops: 0, air: 0, wait: 0, wall: null };
+    P.forEach(p => { p.used = false; });
     howSkip.hidden = false; tutStage(0); status.textContent = 'Tutorial · step 1 of 4';
   }
   function tutStage(n) {
-    tut.s = n; tut.wait = 0;
+    tut.s = n; tut.wait = 0; tut.air = 0; tut.hops = 0;
     const L = [
-      () => say('How to play · 1/4', `${HOLD(0)} — <em>Finn</em> flies up.<br>Let go — he drops.`),
-      () => say('How to play · 2/4', `${HOLD(1)} — <em>Elsie</em> flies up.`),
-      () => { say('How to play · 3/4', 'Catch the <em>heart</em> with the line<br>between your hands'); tutHeart(); },
-      () => { say('How to play · 4/4', 'Fly through the <em>gap</em> in the glitch wall.<br>Stay close or they let go!'); tutWall(); }
+      () => say('How to play · 1/4', `${KEYN()} — <em>Finn and Elsie</em> both hop up.<br>Do it 3 times.`),
+      () => say('How to play · 2/4', 'Keep tapping to stay in the air.<br>Every hop is a little different — <em>luck!</em>'),
+      () => { say('How to play · 3/4', 'Catch the <em>heart</em> with the line<br>between their hands'); tutHeart(); },
+      () => { say('How to play · 4/4', 'Red walls = <em>danger</em>.<br>Hop through the glowing <em>gap</em>!'); tutWall(); }
     ];
     L[n](); status.textContent = `Tutorial · step ${n + 1} of 4`;
   }
-  function tutHeart() { const m = (P[0].y + P[1].y) / 2 - 12; hearts.push({ x: W - 30, y: clamp(m, 70, SEA - 50), ph: 0, tut: true }); burst(W - 30, m, '#f3a0c8', 8); }
-  function tutWall() { tut.wall = { x: W + 10, w: 24, gy: 124, gh: 132, seed: Math.random() * 99, passed: false, touched: false }; walls.push(tut.wall); }
+  function tutHeart() { const m = (P[0].y + P[1].y) / 2 - 12; hearts.push({ x: W - 30, y: clamp(m, 80, SEA - 60), ph: 0, tut: true }); burst(W - 30, m, '#f3a0c8', 8); }
+  function tutWall() { tut.wall = { x: W + 10, w: 26, gy: 124, gh: 150, seed: Math.random() * 99, passed: false, touched: false }; walls.push(tut.wall); }
   function tutNice(next) { say('Nice!', next === 4 ? 'Ready? <em>Go!</em>' : 'Nice!', true); Sfx.blip(5); tut.wait = next === 4 ? 1.1 : .8; tut.next = next; }
   function endTut(skipped) {
     markTut(); howSkip.hidden = true; hush(); root.classList.remove('tutting'); tut = null;
@@ -6955,38 +6983,44 @@ function initGame() {
   }
   function tutStep(dt) {
     if (tut.wait > 0) { tut.wait -= dt; if (tut.wait <= 0) { if (tut.next === 4) return endTut(); tutStage(tut.next); } return; }
-    if (tut.s === 0) { if (P[0].hold) tut.held[0] += dt; if (tut.held[0] > .45) tutNice(1); }
-    else if (tut.s === 1) { if (P[1].hold) tut.held[1] += dt; if (tut.held[1] > .45) tutNice(2); }
+    if (tut.s === 0) { if (tut.hops >= 3) tutNice(1); }
+    else if (tut.s === 1) {
+      const up = P.every(p => p.y + BOT < SEA - 4);
+      tut.air = up ? tut.air + dt : 0;
+      if (tut.air > 3) tutNice(2);
+      else if (!up && tut.hops > 0) say('How to play · 2/4', 'Splash! Tap a bit <em>faster</em> —<br>stay up for 3 seconds');
+    }
     else if (tut.s === 2) {
       if (tut.caught) { tut.caught = false; tutNice(3); }
-      else if (!hearts.length) { say('How to play · 3/4', 'Missed — try again: one a bit <em>higher</em>,<br>one a bit <em>lower</em>'); tutHeart(); }
+      else if (!hearts.length) { say('How to play · 3/4', 'Missed — hop so the heart passes<br><em>between</em> them'); tutHeart(); }
     } else if (tut.s === 3 && tut.wall && tut.wall.passed) {
-      if (tut.wall.touched) { say('How to play · 4/4', 'Oops — aim for the <em>gap</em>.<br>Once more!'); tutWall(); }
+      if (tut.wall.touched) { say('How to play · 4/4', 'Ouch — that wall is <em>red</em> for a reason.<br>Aim for the gap!'); tutWall(); }
       else tutNice(4);
     }
   }
-  /* the attract loop: 4 beats, 4.5 s each; the riders are steered like a player would */
-  const aim = (p, ty) => (p.y - ty) + p.vy * .2 > 0;
-  function demoTargets(u) {
-    if (u < 4.5) return u < 2.2 ? [(u > .3 && u < 1.3) ? 82 : 140, 140] : [128, (u > 2.6 && u < 3.6) ? 88 : 150];
-    if (u < 9) return [100, 152];
-    if (u < 13.5) return [130, 142];
-    return u < 16.2 ? [84, 186] : [118, 136];
+  /* the attract loop: 4 beats, 4.5 s each; a pretend player taps to hold a target height */
+  function demoTarget(u) {
+    if (u < 4.5) return 120 + Math.sin(u * 2.2) * 30;
+    if (u < 9) return 112;
+    if (u < 13.5) return 128;
+    return 118;
   }
   function demoStep(dt) {
     demoT += dt; const u = demoT % 18, ph = Math.floor(u / 4.5);
     if (ph !== demoPh) {
       demoPh = ph; walls = []; hearts = [];
-      if (ph === 0) say('Demo · 1/4', `${HOLD(0)} — Finn flies up · ${HOLD(1)} — Elsie flies up`);
-      if (ph === 1) { say('Demo · 2/4', 'Catch <em>hearts</em> with the line between your hands'); hearts.push({ x: W - 50, y: 116, ph: 0 }); }
-      if (ph === 2) { say('Demo · 3/4', 'Fly through the <em>gaps</em> — glitch walls hurt'); walls.push({ x: W - 20, w: 24, gy: 122, gh: 124, seed: 1, passed: false }); }
-      if (ph === 3) say('Demo · 4/4', 'Drift too far apart and they <em>let go</em> — stay close');
+      if (ph === 0) say('Demo · 1/4', `${KEYN()} — both riders hop up together`);
+      if (ph === 1) { say('Demo · 2/4', 'Catch <em>hearts</em> with the line between their hands'); hearts.push({ x: W - 50, y: 110, ph: 0 }); }
+      if (ph === 2) { say('Demo · 3/4', 'Red walls hurt — hop through the glowing <em>gap</em>'); walls.push({ x: W - 20, w: 26, gy: 124, gh: 150, seed: 1, passed: false }); }
+      if (ph === 3) say('Demo · 4/4', 'Each hop is a bit different — if they drift too far apart they <em>let go</em>');
     }
-    const tg = demoTargets(u); P.forEach((p, i) => { p.hold = aim(p, tg[i]); });
+    const m = (P[0].y + P[1].y) / 2, v = (P[0].vy + P[1].vy) / 2;
+    if (m + v * .18 > demoTarget(u) && v > -40 && t - (P[0].flapT || 0) > .18) hop(true);
   }
   function start() {
     reset(); state = 'play'; titleEl.hidden = true; overEl.hidden = true; root.classList.add('playing'); hush(); demoPh = -1;
-    status.textContent = 'Hold to rise. Don’t let go.'; Sfx.win();
+    status.textContent = FINE ? 'Space or click = hop. Keep them close.' : 'Tap = hop. Keep them close.'; Sfx.win();
+    hop(true);
   }
   function over() {
     state = 'over'; overAt = t; root.classList.remove('playing');
@@ -7007,41 +7041,24 @@ function initGame() {
     if (lives <= 0) over();
   }
 
-  /* ---------- input ---------- */
-  const K0 = ['a', 'w', 'q', 's'], K1 = ['l', 'p', 'arrowup', 'k'];
-  function press(i, on) {
-    if (state === 'title' && on) { begin(); }
-    else if (state === 'over' && on) { if (t - overAt > .8) start(); return; }
-    const p = P[i]; if (p.hold === on) return; p.hold = on;
-    if (on) {
-      const prev = lastPress[i]; p.used = true; lastPress[i] = t; Sfx.blip(i ? 4 : 2);
-      /* SYNC: a deliberate simultaneous press after a pause (not a mash): +5, at most once every 2 s */
-      if (state === 'play' && Math.abs(lastPress[0] - lastPress[1]) < .12 && P[0].hold && P[1].hold && t - lastSync > 2 && t - prev > .5) { lastSync = t; pts += 5; pop((P[0].x + P[1].x) / 2, Math.min(P[0].y, P[1].y) - 50, 'SYNC +5', '#ffe45c'); }
-    }
+  /* ---------- input: one action, everywhere ---------- */
+  function press() {
+    if (state === 'title') { begin(); return; }
+    if (state === 'over') { if (t - overAt > .8) start(); return; }
+    if (state === 'play' || state === 'tut') { hop(); if (tut) tut.hops++; }
   }
+  const HOPKEYS = [' ', 'enter', 'arrowup', 'w'];
   addEventListener('keydown', e => {
-    if (e.repeat) return;   // a held key never restarts the game from the rank box
-    if (!vis || e.metaKey || e.ctrlKey || e.altKey || (e.target.closest && e.target.closest('input,textarea'))) return;
+    if (e.repeat) return;   // holding does nothing: tap again
+    if (!vis || e.metaKey || e.ctrlKey || e.altKey || (e.target.closest && e.target.closest('input,textarea,button'))) return;
     const k = e.key.toLowerCase();
-    let used = false;
-    if (K0.includes(k)) { press(0, true); used = true; }
-    else if (K1.includes(k)) { press(1, true); used = true; }
-    else if (k === ' ' || k === 'enter') { if (state !== 'play' || k === ' ') { press(0, true); press(1, true); used = true; } }
-    if (used && (state === 'play' || k === ' ' || k === 'arrowup')) e.preventDefault();
+    if (HOPKEYS.includes(k)) { press(); e.preventDefault(); }
   });
-  addEventListener('keyup', e => {
-    const k = e.key.toLowerCase();
-    if (K0.includes(k)) press(0, false); else if (K1.includes(k)) press(1, false); else if (k === ' ' || k === 'enter') { press(0, false); press(1, false); }
-  });
-  addEventListener('blur', () => { P.forEach(p => p.hold = false); });
-  const ptr = new Map();
-  cv.addEventListener('pointerdown', e => { e.preventDefault(); const r = cv.getBoundingClientRect(); const i = (e.clientX - r.left) < r.width / 2 ? 0 : 1; ptr.set(e.pointerId, i); try { cv.setPointerCapture(e.pointerId); } catch (_) {} press(i, true); });
-  const up = e => { if (!ptr.has(e.pointerId)) return; const i = ptr.get(e.pointerId); ptr.delete(e.pointerId); if (![...ptr.values()].includes(i)) press(i, false); };
-  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+  cv.addEventListener('pointerdown', e => { e.preventDefault(); press(); });
   cv.addEventListener('contextmenu', e => e.preventDefault());
   $('#cpGo').addEventListener('click', begin); $('#cpAgain').addEventListener('click', start);
   $('#cpTut').addEventListener('click', startTut); howSkip.addEventListener('click', () => { if (state === 'tut') endTut(true); });
-  const toTitle = () => { state = 'title'; titleEl.hidden = false; overEl.hidden = true; root.classList.remove('playing', 'tutting'); howSkip.hidden = true; tut = null; reset(); walls = []; hearts = []; demoPh = -1; demoT = 0; showDol(); P.forEach(p => { p.used = false; p.hold = false; }); };
+  const toTitle = () => { state = 'title'; titleEl.hidden = false; overEl.hidden = true; root.classList.remove('playing', 'tutting'); howSkip.hidden = true; tut = null; reset(); walls = []; hearts = []; demoPh = -1; demoT = 0; showDol(); P.forEach(p => { p.used = false; }); };
   /* v22: the title-bar buttons do what they look like. ↺ restarts (a run starts over, anything else goes back to the title);
      the square makes the game big: the window lifts out of the page over a dark veil, Esc or the veil brings it back */
   $('#gameReset').onclick = () => { Sfx.glitch && Sfx.glitch(); flash = .8; shake = .25; if (state === 'play' || state === 'over') start(); else toTitle(); };
@@ -7062,10 +7079,10 @@ function initGame() {
   }
   maxBtn.onclick = () => setMax(!ph);
   addEventListener('keydown', e => { if (e.key === 'Escape' && ph) setMax(false); });
-  new IntersectionObserver(([e]) => { vis = e.isIntersecting; if (!vis) P.forEach(p => p.hold = false); }, { threshold: .35 }).observe(root);
+  new IntersectionObserver(([e]) => { vis = e.isIntersecting; }, { threshold: .35 }).observe(root);
   const showDol = () => { if (state !== 'title') return; const n = bonus(); status.textContent = n ? `Insert coin. ${n} hidden dolphin${n > 1 ? 's' : ''} found: +${n} li${n > 1 ? 'ves' : 'fe'}.` : 'Insert coin. Hidden dolphins on this page are extra lives.'; };
   showDol(); setInterval(() => { if (state !== 'play') { showDol(); if (state === 'title') { lives = 3 + bonus(); paintHud(); } } }, 1500);
-  if (FINE) { k1.textContent = 'A'; k2.textContent = 'L'; } else { k1.textContent = '◀ tap'; k2.textContent = 'tap ▶'; }
+  k1.textContent = FINE ? 'SPACE · CLICK' : 'TAP'; k2.textContent = '';
 
   /* ---------- simulation ---------- */
   function step(dt) {
@@ -7074,7 +7091,6 @@ function initGame() {
     if (playing) { run += dt; speed = 92 + Math.min(118, run * 1.5); }
     const sp = playing ? speed : tutting ? 72 : demo ? 82 : 52;
     if (demo && vis) demoStep(dt);
-    if (tutting) { if (tut.s === 0) P[1].hold = aim(P[1], 138); if (tut.s === 1) P[0].hold = aim(P[0], 126); }
     dist += sp * dt;
     invul = Math.max(0, invul - dt); shake = Math.max(0, shake - dt); flash = Math.max(0, flash - dt * 3); regrab = Math.max(0, regrab - dt);
     // background life
@@ -7091,9 +7107,11 @@ function initGame() {
       p.x = lerp(p.x, XS[i], 1 - Math.exp(-dt * 4));
       if (!live) { p.y = 118 + i * 16 + Math.sin(t * 2.1 + i * 1.3) * 12; p.vy = Math.cos(t * 2.1 + i * 1.3) * 25; }
       else {
-        const acc = p.hold ? -640 : 540;
-        p.vy = clamp(p.vy + acc * dt, -210, 250); p.y += p.vy * dt;
-        if (p.y - TOP < 4) { p.y = TOP + 4; p.vy = 0; }
+        /* gravity, and the hand-hold: a soft spring pulls the two back toward each other */
+        const other = P[1 - i];
+        p.vy = clamp(p.vy + (GRAV + (other.y - p.y) * SPRING) * dt, -230, 260); p.y += p.vy * dt;
+        if (state === 'tut' && tut && tut.s === 0 && p.y + BOT > SEA - 30) { p.y = SEA - BOT - 30; p.vy = Math.min(0, p.vy); }   // step 1: they wait on the water
+        if (p.y - TOP < 4) { p.y = TOP + 4; p.vy = Math.max(0, p.vy); }
         if (p.y + BOT > SEA + 10) { burst(p.x, SEA, '#8fd8ff', 16); if (playing) { hit(p, 'SPLASH'); p.y = SEA - BOT - 28; p.vy = -180; } else { p.y = SEA - BOT + 8; p.vy = -150; } }
       }
       // spray off the tail
@@ -7113,7 +7131,7 @@ function initGame() {
     if (playing) { nextWall -= sp * dt; nextHeart -= sp * dt; nextBurger -= sp * dt; }
     const diff = clamp(run / 80, 0, 1);
     if (nextWall <= 0) {
-      const gapH = lerp(150, 104, diff), gy = 40 + Math.random() * (SEA - 80);
+      const gapH = lerp(172, 136, diff), gy = 40 + Math.random() * (SEA - 80);   // v27: gaps sized for hopping
       walls.push({ x: W + 10, w: 20 + Math.random() * 10, gy: clamp(gy, gapH / 2 + 8, SEA - gapH / 2 + 4), gh: gapH, seed: Math.random() * 99, passed: false });
       nextWall = lerp(250, 180, diff) + Math.random() * 60;
     }
@@ -7130,7 +7148,7 @@ function initGame() {
     const h0 = hand(0), h1 = hand(1);
     walls.forEach(w => {
       w.x -= sp * dt;
-      P.forEach(p => { if (p.x + 18 > w.x && p.x - 24 < w.x + w.w && (p.y - TOP + 6 < w.gy - w.gh / 2 || p.y + BOT - 4 > w.gy + w.gh / 2)) { if (playing) hit(p, 'GLITCH'); else if (!w.touched) { w.touched = true; burst(p.x, p.y - 10, '#ff4b6b', 10); if (tutting) { pop(p.x, p.y - 46, 'OOPS', '#ff4b6b'); Sfx.glitch(); } } } });
+      P.forEach(p => { if (p.x + 16 > w.x && p.x - 22 < w.x + w.w && (p.y - TOP + 14 < w.gy - w.gh / 2 || p.y + BOT - 10 > w.gy + w.gh / 2)) { if (playing) hit(p, 'GLITCH'); else if (!w.touched) { w.touched = true; burst(p.x, p.y - 10, '#ff4b6b', 10); if (tutting) { pop(p.x, p.y - 46, 'OOPS', '#ff4b6b'); Sfx.glitch(); } } } });
       if (!w.passed && w.x + w.w < P[0].x - 20) { w.passed = true; if (playing) pts += 3; }
     });
     walls = walls.filter(w => w.x > -40);
@@ -7188,6 +7206,16 @@ function initGame() {
     const mt = (arr, base, col, par) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(-10, base); const seg = 22, off = (dist * par) % seg, i0 = Math.floor(dist * par / seg);
       for (let i = 0; i <= W / seg + 2; i++) { const xx = Math.round(i * seg - off), yy = Math.round(base - arr[(i0 + i) % arr.length]); ctx.lineTo(xx, yy); ctx.lineTo(xx + seg / 2, yy); } ctx.lineTo(W + 20, base); ctx.closePath(); ctx.fill(); };
     mt(M1, SEA, mix('#2a1a5a', '#5a1a4a', k), .1); mt(M2, SEA, mix('#120a2e', '#2a0a22', k), .22);
+    // the seaside town
+    { const off = (dist * .3) % TOWN_L, body = mix('#1c0f36', '#2c0f2c', k), roofC = mix('#2e1650', '#4a1840', k);
+      for (let rep = 0; rep < 2; rep++) town.forEach(hs => {
+        const x = Math.round(hs.x - off + rep * TOWN_L); if (x > W + 4 || x + hs.w < -4) return;
+        const y = SEA - hs.h;
+        R(x, y, hs.w, hs.h, body);
+        for (let r = 0; r < hs.roof; r++) R(x - 1 + r, y - r - 1, hs.w + 2 - r * 2, 1, roofC);   // stepped roof
+        if (hs.chim) R(x + hs.w - 5, y - hs.roof - 2, 2, 4, roofC);
+        hs.wins.forEach(wn => { if (wn.dx + 2 > hs.w - 1) return; const on = wn.lit && Math.sin(t * .7 + wn.ph) > -.85; R(x + wn.dx, y + wn.dy, 2, 2, on ? wn.c : '#0d0618'); });
+      }); }
     // sea: dark water, rolling wave lines, the moon's reflection
     R(-6, SEA, W + 12, H - SEA + 6, mix('#06061a', '#0e0414', k));
     for (let row = 0; row < 12; row++) { const y = SEA + 3 + row * 4.5, sp = 1 + row * .5, len = 6 + row * 2; for (let x = -((dist * .35 * sp) % 28); x < W; x += 28) R(x + (row % 2) * 14, y, len, 1, `rgba(143,216,255,${.08 + row * .012})`); }
@@ -7195,14 +7223,24 @@ function initGame() {
     bubbles.forEach(b => { ctx.fillStyle = `rgba(255,214,240,${.5 * (1 - b.k)})`; if (b.s) ctx.drawImage(S.heart, b.x | 0, b.y | 0, 7, 7); else ctx.fillRect(b.x | 0, b.y | 0, 2, 2); });
     // distant dolphins leaping
     bgDols.forEach(d => { const y = SEA - Math.sin(d.k * Math.PI) * 30 * d.s; ctx.save(); ctx.translate(d.x | 0, y | 0); ctx.rotate(-(d.k - .5) * 1.4); ctx.globalAlpha = .85; ctx.drawImage(BG_DOL, -13 * d.s, -8 * d.s, 26 * d.s, 16 * d.s); ctx.restore(); if (d.k > .88) R(d.x - 6, SEA - 1, 12, 1, 'rgba(255,214,240,.6)'); });
-    // walls: glitch pillars
+    // walls: DANGER — red/black hazard stripes that crawl, crackling electric edges, spikes at the gap, warning signs,
+    // and the safe gap itself glows mint with chevrons, so you know where to go and what not to touch
     walls.forEach(w => {
-      const top = w.gy - w.gh / 2, bot = w.gy + w.gh / 2;
-      [[14, top - 14], [bot, SEA - bot + 12]].forEach(([y, h]) => {
-        R(w.x, y, w.w, h, '#120616');
-        for (let yy = y; yy < y + h; yy += 3) { const j = (Math.sin(yy * .7 + t * 9 + w.seed) > .93) ? ((Math.random() - .5) * 8) : 0; R(w.x + j, yy, w.w, 1, (yy / 3 | 0) % 2 ? 'rgba(232,125,179,.25)' : 'rgba(95,244,255,.12)'); }
-        R(w.x, y, 2, h, '#e87db3'); R(w.x + w.w - 2, y, 2, h, '#8fd8ff');
-        R(w.x - 3, y === 14 ? top - 4 : bot, w.w + 6, 4, '#f3a0c8');
+      const top = w.gy - w.gh / 2, bot = w.gy + w.gh / 2, pulse = .5 + .5 * Math.sin(t * 8 + w.seed), crawl = (t * 24) | 0;
+      // the safe lane
+      ctx.fillStyle = `rgba(125,255,170,${.08 + .07 * pulse})`; ctx.fillRect(w.x - 10, top + 6, w.w + 20, w.gh - 12);
+      for (let c = 0; c < 3; c++) { const cy = w.gy - 4, cx = w.x - 4 + c * 9 + ((t * 18) % 9); ctx.fillStyle = `rgba(125,255,170,${.55 - c * .12})`; for (let r = 0; r < 4; r++) { ctx.fillRect(cx + r, cy + r, 2, 1); ctx.fillRect(cx + r, cy + 7 - r, 2, 1); } }
+      [[0, top], [bot, SEA + 12 - bot]].forEach(([y, h], part) => {
+        if (h <= 0) return;
+        ctx.fillStyle = `rgba(255,61,110,${.16 + .2 * pulse})`; ctx.fillRect(w.x - 6, y, 4, h); ctx.fillRect(w.x + w.w + 2, y, 4, h);   // red glow
+        R(w.x, y, w.w, h, '#14030c');
+        for (let yy = 0; yy < h; yy += 2) for (let xx = 0; xx < w.w; xx += 2) if ((((xx + yy + crawl) / 6) | 0) % 2 === 0) R(w.x + xx, y + yy, 2, 2, '#ff3d6e');
+        for (let yy = y; yy < y + h; yy += 2) { const z = Math.sin(yy * .9 + t * 34 + w.seed) * 1.6; R(w.x - 2 + z, yy, 1, 2, '#fff0f9'); R(w.x + w.w + 1 - z, yy, 1, 2, '#ffd0e4'); }
+        // spikes into the gap
+        const ey = part ? y : y + h;
+        for (let xx = 0; xx < w.w; xx += 6) for (let r = 0; r < 4; r++) R(w.x + xx + r, part ? ey - r - 1 : ey + r, 6 - r * 2, 1, r ? '#ff3d6e' : '#fff0f9');
+        // the warning sign, bobbing
+        if (h > 30) { const sy = part ? y + Math.min(h - 26, 22) : y + h - 34; ctx.drawImage(S.warn, (w.x + w.w / 2 - 11) | 0, (sy + Math.sin(t * 5 + w.seed) * 1.5) | 0, 22, 20); }
       });
     });
     // hearts + burgers, chunky
@@ -7234,7 +7272,7 @@ function initGame() {
       if (p.head.im) { const im = p.head.im, hw = im.naturalWidth, hh = im.naturalHeight; ctx.drawImage(im, Math.round(-hw / 2 + (i ? 1 : -1)), Math.round(-12 - hh + 5 + Math.sin(t * 6 + i) * .8), hw, hh); }
       else R(-8, -34, 16, 20, '#f2c2a0');
       ctx.restore(); ctx.globalAlpha = 1;
-      if (p.hold && state === 'play') { R(p.x - 30, p.y + 16, 1, 3, 'rgba(255,240,249,.8)'); R(p.x - 33, p.y + 18, 1, 3, 'rgba(255,240,249,.6)'); }
+      if (t - (p.flapT || -9) < .16 && state !== 'title') { R(p.x - 30, p.y + 16, 1, 3, 'rgba(255,240,249,.8)'); R(p.x - 33, p.y + 18, 1, 3, 'rgba(255,240,249,.6)'); }
     });
     // particles + popups
     fx.forEach(f => {
@@ -7246,15 +7284,13 @@ function initGame() {
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = 'rgba(5,2,5,.16)'; for (let y = 0; y < cv.height; y += 3) ctx.fillRect(0, y, cv.width, 1);
 
   }
-  // keycaps sit next to Finn and Elsie until each has been pressed once
+  // v27: ONE keycap — SPACE (or TAP) — under the couple, pressed down on every hop; shown while you learn
   function keys() {
-    const r = root.clientWidth / W;
-    [[k1, P[0], -74], [k2, P[1], 40]].forEach(([el, p, dx]) => {
-      const i = p === P[0] ? 0 : 1;
-      const show = (state === 'title') || (state === 'tut' && tut && (tut.s >= 2 || tut.s === i)) || (state === 'play' && !p.used && run < 6);
-      el.style.opacity = show ? 1 : 0; el.style.transform = `translate(${((p.x + dx) * r) | 0}px,${((p.y - 40) * r) | 0}px)`;
-      el.classList.toggle('down', p.hold);
-    });
+    const r = root.clientWidth / W, mx = (P[0].x + P[1].x) / 2, my = Math.max(P[0].y, P[1].y) + 40;
+    const show = state === 'title' || (state === 'tut' && tut && tut.s <= 1) || (state === 'play' && run < 4);
+    k1.style.opacity = show ? 1 : 0; k1.style.transform = `translate(calc(${(mx * r) | 0}px - 50%),${(Math.min(my, SEA - 6) * r) | 0}px)`;
+    k1.classList.toggle('down', t - (P[0].flapT || -9) < .14);
+    k2.style.opacity = 0;
   }
   let acc = 0;
   tickers.add((tt, dt) => {
@@ -7264,7 +7300,7 @@ function initGame() {
     draw(); keys();
   });
   paintHud();
-  window.__couple = { get vis() { return vis; }, get acc() { return acc; }, get state() { return state; }, get lives() { return lives; }, get y() { return P.map(p => Math.round(p.y)); }, get dbg() { return { inv: +invul.toFixed(2), hold: P.map(p => p.hold), vy: P.map(p => Math.round(p.vy)), t: +t.toFixed(2), run: +run.toFixed(2) }; } };
+  window.__couple = { get vis() { return vis; }, get acc() { return acc; }, get state() { return state; }, get lives() { return lives; }, get y() { return P.map(p => Math.round(p.y)); }, get dbg() { return { inv: +invul.toFixed(2), vy: P.map(p => Math.round(p.vy)), t: +t.toFixed(2), run: +run.toFixed(2) }; } };
 }
 
 /* =========================================================================
@@ -7994,7 +8030,7 @@ function initPopper() {
     ['#heroCta', 'finn', {}, ['Two players. One trailer 🍿', 'Find a player 2 first 🎮', 'Volume up. Lights down 🌙']],
     ['#btnBreakdown', 'cg', {}, ['Mocap suits are itchy, btw 🕺', 'Unreal engine, real sweat 💦', 'Here is how the magic broke 🔧']],
     ['#btnBtsGallery', 'elsie', {}, ['Bring snacks, it is a big folder 📁', 'Behind every take: ten more 🎬']],
-    ['#cpGo', 'elsie', {}, ['Hold hands. Don’t let go 🤝', 'A and L. Together. ❤️']],
+    ['#cpGo', 'elsie', {}, ['Hold hands. Don’t let go 🤝', 'Space to hop. Together ❤️']],
     ['#cpAgain', 'finn', {}, ['Again? Again. 🔁', 'Best of three 🏆']],
     ['.mailbar', 'finn', { size: 1.4, lift: 16 }, ['Psst… Bertil reads every letter himself ✉️', 'Festival? Distribution? Just hi? 👋', 'Player 2 wanted. Apply here 🎮', 'We reply faster than a dolphin jumps 🐬', 'Grill shift ends at nine. Then we read mail 🍔']]
   ];
