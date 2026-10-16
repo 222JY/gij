@@ -2583,9 +2583,33 @@ body.boot-out .hero-curtain{-webkit-mask:none;mask:none;animation:none;backgroun
 .tbx.tb-dol.done{background:#050205;color:#fff0f9}
 .tbx.tb-dol.done .tbd-n{background:#ff8fc8;color:#050205}
 
+/* ---------------- v26: the popper lives on the page (scrolls with its button) ---------------- */
+.popper{position:absolute;left:0;top:0;right:auto;bottom:auto;width:0;height:0;overflow:visible}
+.popper .pp-clip,.popper .pp-say{position:absolute}
+.popper:not(.flip) .pp-say{translate:-100% 0}
+.popper.fx .pp-clip,.popper.fx .pp-say{position:fixed}
+
+/* ---------------- v26: stickers — hover is just a smooth zoom (no lift, no jiggle, no boil) ---------------- */
+.vp-stk img{transition:scale .3s cubic-bezier(.2,.8,.2,1)}
+.vp-it.vp-stk:hover img,.has-boil .vp-it.vp-stk:hover img{animation:none;translate:0 0;scale:1.08;
+  filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff) drop-shadow(0 1px 0 rgba(0,0,0,.3)) drop-shadow(0 9px 10px rgba(0,0,0,.45))}
+.vp-mon{transition:scale .3s cubic-bezier(.2,.8,.2,1)}
+.vp-mon:hover{translate:0 0;scale:1.04}
+.vp-tag{transition:scale .3s cubic-bezier(.2,.8,.2,1)}
+.vp-tag:hover{scale:1.08}
+.vp-it.grab.vp-stk img,.vp-it.grab.vp-mon{scale:1.02}
+
+/* ---------------- v26: before any script has run, the page already IS the loader (no flash of the site) ---------------- */
+.tt-title:not(.tt),.hero-title:not(.tt){visibility:hidden}   /* the big titles wait for their canvas */
+body.is-booting .hero-tag,body.is-booting .hero-snd{visibility:hidden}
+/* a quicker flap */
+.fl.ft{animation-duration:.05s}
+.fl.fb{animation-duration:.05s;animation-delay:.05s}
+
 </style>
 </head>
 <body>
+<script>document.body.classList.add("is-booting");window.__booting=true;</script>
 <a class="skip" href="#story">Skip to content</a>
 
 <!-- ============ LOADER (v14): there is no separate loader screen. The hero itself starts in the dark and
@@ -2662,7 +2686,7 @@ body.boot-out .hero-curtain{-webkit-mask:none;mask:none;animation:none;backgroun
     <h1 class="hero-title" id="heroTitle">The Otter</h1>
     <p class="hero-tag">Two players. No instructions.</p>
     <div class="hero-ctas">
-      <button class="hero-cta ob ob--hero" type="button" id="heroCta" data-cursor="link" data-cursor-label="Play trailer"><span class="ob-wipe" aria-hidden="true"></span><span class="ob-ico hc-ico" aria-hidden="true"><svg class="mono" viewBox="0 0 6 8" shape-rendering="crispEdges"><path d="M0 0h2v1h1v1h1v1h1v1h1v1H5v1H4v1H3v1H2v1H0z" fill="currentColor"/></svg><i class="hc-ring"></i></span><span class="ob-txt hc-t"><span class="ob-a hc-tx">Play trailer</span><span class="ob-b" aria-hidden="true">Roll the tape</span><span class="hc-ld" aria-hidden="true">Loading <b id="bootPct">000</b>%</span></span><span class="ob-track" aria-hidden="true"><i class="ob-dot"></i><i class="hc-bar"></i></span><span class="ob-go" aria-hidden="true"><svg viewBox="0 0 7 7" shape-rendering="crispEdges"><path d="M3 0h1v1h1v1h1v1h1v1H6v1H5v1H4v1H3V6h1V5H0V2h4V1H3z" fill="currentColor"/></svg></span></button>
+      <button class="hero-cta ob ob--hero is-loading" type="button" id="heroCta" data-cursor="link" data-cursor-label="Play trailer"><span class="ob-wipe" aria-hidden="true"></span><span class="ob-ico hc-ico" aria-hidden="true"><svg class="mono" viewBox="0 0 6 8" shape-rendering="crispEdges"><path d="M0 0h2v1h1v1h1v1h1v1h1v1H5v1H4v1H3v1H2v1H0z" fill="currentColor"/></svg><i class="hc-ring"></i></span><span class="ob-txt hc-t"><span class="ob-a hc-tx">Play trailer</span><span class="ob-b" aria-hidden="true">Roll the tape</span><span class="hc-ld" aria-hidden="true">Loading <b id="bootPct">000</b>%</span></span><span class="ob-track" aria-hidden="true"><i class="ob-dot"></i><i class="hc-bar"></i></span><span class="ob-go" aria-hidden="true"><svg viewBox="0 0 7 7" shape-rendering="crispEdges"><path d="M3 0h1v1h1v1h1v1h1v1H6v1H5v1H4v1H3V6h1V5H0V2h4V1H3z" fill="currentColor"/></svg></span></button>
       
     </div>
   </div>
@@ -5385,7 +5409,10 @@ function initStory() {
     kick();
     const cl = el.cloneNode(true);
     cl.classList.remove('is-up'); cl.removeAttribute('style'); cl.setAttribute('aria-label', 'Flip the card');
+    /* v26: the copied depth canvas is blank — drop it and show the picture; then the live depth canvas moves in */
+    cl.querySelectorAll('.pk-gl').forEach(c => c.remove()); cl.querySelectorAll('.pk-art.gl-on').forEach(a => a.classList.remove('gl-on'));
     modal.appendChild(cl); modal.hidden = false;
+    if (window.__pkDepth) window.__pkDepth.adopt($('.pk-art', cl), +el.dataset.i);
     cl.style.transform = fromTo(el, cl);
     el.classList.add('is-out');
     cl.getBoundingClientRect();
@@ -5405,7 +5432,7 @@ function initStory() {
     cl.style.transition = REDUCED ? 'none' : 'transform .6s cubic-bezier(.5,0,.2,1)';
     cl.style.transform = fromTo(el, cl);
     modal.classList.remove('on');
-    setTimeout(() => { S.delete(cl); cl.remove(); modal.hidden = true; el.classList.remove('is-out'); openC = null; try { el.focus({ preventScroll: true }); } catch (e) {} }, REDUCED ? 0 : 620);
+    setTimeout(() => { S.delete(cl); if (window.__pkDepth) window.__pkDepth.release(); cl.remove(); modal.hidden = true; el.classList.remove('is-out'); openC = null; try { el.focus({ preventScroll: true }); } catch (e) {} }, REDUCED ? 0 : 620);
   }
   $('.pk-veil', modal).addEventListener('click', close);
   $('.pk-x', modal).addEventListener('click', close);
@@ -5565,7 +5592,9 @@ function initPkDepth() {
   SRC.forEach(([a, b, pos], i) => Promise.all([load(a), load(b)]).then(([im, dm]) => { if (im && dm) { sets[i] = { ti: tex(im), td: tex(dm), w: im.naturalWidth, h: im.naturalHeight, pos }; need = true; place(); } }));
 
   let host = null, idx = -1, W = 0, H = 0, vis = false, need = true, ox = 0, oy = 0;
+  let adopted = false;
   function place() {
+    if (adopted) return;   // v26: while a card is open in the viewer, the canvas lives there
     const front = cards.find(c => c.dataset.o === '0'); if (!front) return;
     const i = +front.dataset.i;
     if (!sets[i]) { if (host) { host.classList.remove('gl-on'); cv.remove(); host = null; } return; }
@@ -5607,7 +5636,17 @@ function initPkDepth() {
     gl.uniform2f(uOff, tx * sx, ty * sy); gl.uniform4f(uFit, sx, sy, offx, offy);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   });
-  window.__pkDepth = { get host() { return host && +host.closest('.pk').dataset.i; }, get ready() { return sets.map(Boolean); } };
+  /* v26: the inspect view clones the card; the depth canvas moves into the clone so the open card keeps its picture
+     (and its depth) instead of showing an empty, black clone of the canvas */
+  function adopt(art, i) {
+    if (!art || !sets[i]) return false;
+    art.querySelectorAll('.pk-gl').forEach(c => { if (c !== cv) c.remove(); });
+    if (host && host !== art) host.classList.remove('gl-on');
+    adopted = true; host = art; idx = i; art.prepend(cv); art.classList.add('gl-on'); vis = true; size(); need = true;
+    return true;
+  }
+  function release() { adopted = false; if (host) host.classList.remove('gl-on'); host = null; place(); }
+  window.__pkDepth = { adopt, release, get host() { return host && +host.closest('.pk').dataset.i; }, get ready() { return sets.map(Boolean); } };
 }
 
 /* =========================================================================
@@ -7797,8 +7836,9 @@ function initPolish() {
     });
     bd.addEventListener('pointerleave', () => { tx = ty = 0; on = false; hot = -1; $$('.flap.rowhot', cols).forEach(c => c.classList.remove('rowhot')); });
     let bvis = false; new IntersectionObserver(([e]) => { bvis = e.isIntersecting; }).observe(bd);
+    const mqS = matchMedia('(max-width:860px)');
     tickers.add((t, dt) => {
-      if (!bvis || matchMedia('(max-width:860px)').matches) return;
+      if (!bvis || mqS.matches) return;
       const k = 1 - Math.exp(-dt * 5); cx += (tx - cx) * k; cy += (ty - cy) * k;
       const ix = Math.sin(t * .5) * .06, iy = Math.sin(t * .37) * .05;   // a slow idle sway, like it hangs on cables
       bd.style.transform = `perspective(1500px) rotateX(${(7 - (cy + iy) * 12).toFixed(2)}deg) rotateY(${((cx + ix) * 14).toFixed(2)}deg)`;
@@ -7963,13 +8003,19 @@ function initPopper() {
   document.body.appendChild(root);
   const clip = $('.pp-clip', root), face = $('.pp-face', root), say = $('.pp-say', root), txt = $('.pp-txt', root);
   let cur = null, typer = 0, hideT = 0; const idx = new Map();
+  /* v26: the visitor is pinned to the PAGE, not the screen: it sits on the button's edge in document coordinates,
+     so scrolling while it is up carries it away with its button instead of leaving it floating in place */
   const place = el => {
     const o = el._pp || {}, k = o.size || 1, lift = o.lift || 0;
+    const fixedMode = !!el.closest('#game.is-max');
+    root.classList.toggle('fx', fixedMode);
+    const sx = fixedMode ? 0 : scrollX, sy = fixedMode ? 0 : scrollY;
     const r = el.getBoundingClientRect(), fw = Math.min(150, Math.max(104, r.height * 2.1)) * k;
     const fx = clamp(r.right - fw - Math.min(40, r.width * .08), 8, innerWidth - fw - 8);
-    Object.assign(clip.style, { left: fx + 'px', width: fw + 'px', height: (fw * 1.05) + 'px', top: (r.top - lift - fw * 1.05) + 'px' });
-    say.style.left = ''; say.style.right = (innerWidth - fx + 6) + 'px'; say.style.top = (r.top - lift - fw * .98) + 'px';
-    if (fx < 260) { say.style.right = ''; say.style.left = (fx + fw + 6) + 'px'; root.classList.add('flip'); } else root.classList.remove('flip');
+    Object.assign(clip.style, { left: (fx + sx) + 'px', width: fw + 'px', height: (fw * 1.05) + 'px', top: (r.top - lift - fw * 1.05 + sy) + 'px' });
+    say.style.right = ''; say.style.top = (r.top - lift - fw * .98 + sy) + 'px';
+    if (fx < 260) { say.style.left = (fx + fw + 6 + sx) + 'px'; root.classList.add('flip'); }
+    else { say.style.left = (fx - 6 + sx) + 'px'; root.classList.remove('flip'); }
   };
   const show = (el, faceKey, lines) => {
     clearTimeout(hideT); clearInterval(typer);
@@ -7986,7 +8032,6 @@ function initPopper() {
     el.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse' || e.pointerType === 'pen') show(el, f, lines); });
     el.addEventListener('pointerleave', hide);
   }));
-  addEventListener('scroll', () => { if (cur) place(cur); }, { passive: true });
 }
 
 /* v19 · Otter Airlines: a big pixel plane (drawn like the pixel dolphin) crosses the Screenings section from left to
@@ -8158,29 +8203,32 @@ function initBoard() {
         if (text[c] === '|') { const g = document.createElement('i'); g.className = 'gap'; wrap.appendChild(g); continue; }
         const el = document.createElement('span'); el.className = 'flap'; el.dataset.r = r; el.innerHTML = flapHTML; wrap.appendChild(el);
         cells.push({ el, tb: $('.t b', el), bb: $('.b b', el), ftb: $('.ft b', el), fbb: $('.fb b', el), cur: ' ', target: text[c], r, c, hl: stCol >= 0 && c >= stCol ? d.k : '', lastFlip: 0 });
+        show(cells[cells.length - 1]);
       }
       if (groups === NARROW) {   // phones: the status on its own line under the festival
         const text2 = fit(d.st, 14);
-        for (let c = 0; c < 14; c++) { const el = document.createElement('span'); el.className = 'flap'; el.dataset.r = r; el.innerHTML = flapHTML; wrap.appendChild(el); cells.push({ el, tb: $('.t b', el), bb: $('.b b', el), ftb: $('.ft b', el), fbb: $('.fb b', el), cur: ' ', target: text2[c], r, c: 20 + c, hl: d.k, lastFlip: 0 }); }
+        for (let c = 0; c < 14; c++) { const el = document.createElement('span'); el.className = 'flap'; el.dataset.r = r; el.innerHTML = flapHTML; wrap.appendChild(el); cells.push({ el, tb: $('.t b', el), bb: $('.b b', el), ftb: $('.ft b', el), fbb: $('.fb b', el), cur: ' ', target: text2[c], r, c: 20 + c, hl: d.k, lastFlip: 0 }); show(cells[cells.length - 1]); }
       }
     });
   }
+  /* v26: a flap shows its final character straight away (the board is simply there when you arrive) */
+  function show(c) { c.cur = c.target; c.tb.textContent = c.bb.textContent = c.ftb.textContent = c.fbb.textContent = c.target; if (c.hl) c.el.classList.add(c.hl); }
   /* the clock in the header strip */
   if (clock) { const tick = () => { const d = new Date(); clock.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':'); }; tick(); setInterval(tick, 1000); }
   function flipTo(c, ch, quiet) {
     if (c.cur === ch) return;
     const old = c.cur; c.cur = ch;
     c.tb.textContent = ch; c.bb.textContent = old; c.ftb.textContent = old; c.fbb.textContent = ch;
-    c.el.classList.remove('go'); void c.el.offsetWidth; c.el.classList.add('go');
+    c.el.classList.remove('go'); requestAnimationFrame(() => c.el.classList.add('go'));   // v26: restart without a forced layout
     c.lastFlip = performance.now();
-    clearTimeout(c.to); c.to = setTimeout(() => { c.bb.textContent = ch; c.el.classList.remove('go'); ['hl', 'st', 'st2'].forEach(k => c.el.classList.toggle(k, c.hl === k && ch === c.target)); }, 150);
+    clearTimeout(c.to); c.to = setTimeout(() => { c.bb.textContent = ch; c.el.classList.remove('go'); const fin = ch === c.target; ['hl', 'st', 'st2'].forEach(k => c.el.classList.toggle(k, c.hl === k && fin)); }, 110);
     if (!quiet) Sfx.tick();
   }
   // one animation loop for every flap that is still flipping; a new run (idle row, click, resize) never cancels the others
   let anim = 0;
   function step(now) {
     for (const c of live) {
-      if (now < c.start || now - c.last < 105) continue;
+      if (now < c.start || now - c.last < 58) continue;   // v26: a quicker board
       c.last = now;
       if (c.n >= c.flips) { flipTo(c, c.target, false); live.delete(c); }
       else { flipTo(c, CH[Math.floor(Math.random() * CH.length)], c.n % 3 !== 0); c.n++; }
@@ -8191,7 +8239,7 @@ function initBoard() {
     const list = only || cells;
     if (REDUCED) { list.forEach(c => { c.tb.textContent = c.bb.textContent = c.target; c.cur = c.target; if (c.hl) c.el.classList.add(c.hl); }); return; }
     const t0 = performance.now();
-    list.forEach(c => { c.start = t0 + c.r * 90 + c.c * 26 + Math.random() * 80; c.flips = c.target === ' ' && c.cur === ' ' ? 0 : 3 + Math.floor(Math.random() * 7); c.n = 0; c.last = 0; live.add(c); });
+    list.forEach(c => { c.start = t0 + c.r * 30 + c.c * 8 + Math.random() * 40; c.flips = c.target === ' ' && c.cur === ' ' ? 0 : 2 + Math.floor(Math.random() * 3); c.n = 0; c.last = 0; live.add(c); });
     if (!anim) anim = requestAnimationFrame(step);
   }
   build();
@@ -8203,7 +8251,7 @@ function initBoard() {
     pass.addEventListener('pointerdown', () => { Sfx.pop(); TT.burstAll(.6); });
   }
   let ran = false, vis = false;
-  new IntersectionObserver(([e]) => { vis = e.isIntersecting; if (e.isIntersecting && !ran) { ran = true; run(); } }, { threshold: 0.3 }).observe(board);
+  new IntersectionObserver(([e]) => { vis = e.isIntersecting; if (e.isIntersecting) ran = true; }, { threshold: 0.1 }).observe(board);
   board.addEventListener('click', () => run());
   // hover: flaps near the pointer flip to noise and settle back
   board.addEventListener('pointermove', e => {
@@ -8214,10 +8262,10 @@ function initBoard() {
   });
   // idle: a random row re-scrambles every few seconds
   setInterval(() => { if (!vis || !ran || document.hidden || REDUCED) return; const r = (Math.random() * rowsN) | 0; const row = cells.filter(c => c.r === r && c.target !== ' '); if (row.length) run(row); }, 4200);
-  let rw = innerWidth; addEventListener('resize', () => { if (Math.abs(innerWidth - rw) < 40) return; rw = innerWidth; build(); if (ran) run(); });
+  let rw = innerWidth; addEventListener('resize', () => { if (Math.abs(innerWidth - rw) < 40) return; rw = innerWidth; build(); });
   // the first build can run before fonts / layout settle: measure again once the page is in
   /* the board's own width can change without the window resizing (fonts, scrollbar): rebuild on that too */
-  let bw = board.clientWidth; new ResizeObserver(() => { const w = board.clientWidth; if (Math.abs(w - bw) < 4) return; bw = w; build(); if (ran) run(); }).observe(board);
+  let bw = board.clientWidth; new ResizeObserver(() => { const w = board.clientWidth; if (Math.abs(w - bw) < 4) return; bw = w; build(); }).observe(board);
 }
 
 function initEnd() {
